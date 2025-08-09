@@ -95,8 +95,3 @@ ehPar num | mod num 2 == 0 = True
   | otherwise = False
 
 \end{code}
-
-
-
-
-
