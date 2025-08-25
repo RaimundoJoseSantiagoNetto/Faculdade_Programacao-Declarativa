@@ -120,7 +120,25 @@ converterBinarioAux num = show (mod num 2) ++ converterBinarioAux (div num 2)
 -- Q.12
 -- Objetivo: Converte um numero decimal para hexadecimal
 --------------------------------------------------
+-- Funcao auxiliar: converte um numero de 0 a 15 para o caractere correspondente
+toHexDigit :: Int -> Char
+toHexDigit n
+  | n >= 0 && n <= 9  = head (show n)
+  | n == 10           = 'A'
+  | n == 11           = 'B'
+  | n == 12           = 'C'
+  | n == 13           = 'D'
+  | n == 14           = 'E'
+  | n == 15           = 'F'
+  | otherwise         = error "Numero fora do intervalo hexadecimal"
 
+-- Converte um número decimal para hexadecimal
+decimalToHex :: Int -> String
+decimalToHex 0 = "0"
+decimalToHex n = reverse (convert n)
+  where
+    convert 0 = ""
+    convert x = toHexDigit (x `mod` 16) : convert (x `div` 16)
 
 --------------------------------------------------
 -- Q.13
@@ -167,39 +185,67 @@ tabuadaCP :: Int -> IO ()
 tabuadaCP n = putStrLn(tabuadaAcumCP "" 1 n)
 tabuadaAcumCP :: String -> Int -> Int -> String
 tabuadaAcumCP ac min n
-    | min <= 10 && min > 0 = tabuadaAcumCP (ac ++ (show n ++ " x " ++ show min ++ " = " ++ show (min*n) ++ "\n")) (min + 1) (n)
-    | otherwise = "Tabuada de " ++ show n ++ "\n" ++ ac 
+  | min <= 10 && min > 0 = tabuadaAcumCP (ac ++ (show n ++ " x " ++ show min ++ " = " ++ show (min*n) ++ "\n")) (min + 1) (n)
+  | otherwise = "Tabuada de " ++ show n ++ "\n" ++ ac 
 
 
 --------------------------------------------------
 -- Q.18
--- Objetivo: 
+-- Objetivo: Calcula a aproximacao do numero de euler
 --------------------------------------------------
+approxEuler :: Integer -> Double
+approxEuler 0 = 0
+approxEuler n = (1 / fromIntegral(fat n)) + approxEuler (n - 1)
 
 --------------------------------------------------
 -- Q.19
--- Objetivo: 
+-- Objetivo: Retorna uma tabela com as aproximacoes do numero de euler
 --------------------------------------------------
+tabelaEuler :: Integer -> IO ()
+tabelaEuler n = putStrLn(tabelaEulerAcum "" 1 n)
+tabelaEulerAcum :: String -> Integer -> Integer -> String
+tabelaEulerAcum ac min n
+  | min <= n && min > 0 = tabelaEulerAcum (ac ++ (show min ++ " iteracao: e = " ++ show (approxEuler min) ++ "\n")) (min + 1) (n)
+  | otherwise = "Tabela de valores de Euler - n =" ++ show n ++ "\n" ++ ac 
 
 --------------------------------------------------
 -- Q.20
--- Objetivo: 
+-- Objetivo: Calcula a aproximacao do seno pela serie de Taylor
 --------------------------------------------------
+taylorSen :: Double -> Integer -> Double
+taylorSen x 0 = x   -- primeiro termo: x^(2*0+1) / (2*0+1)! = x
+taylorSen x n = termo + taylorSen x (n - 1)
+  where
+    termo = ((-1) ** fromIntegral n) * (x ** fromIntegral (2*n + 1)) / fromIntegral (fat (2*n + 1))
 
 --------------------------------------------------
 -- Q.21
--- Objetivo: 
+-- Objetivo: Calcula a aproximacao do cosseno pela serie de Taylor
 --------------------------------------------------
+taylorCos :: Double -> Integer -> Double
+taylorCos x 0 = 1   -- primeiro termo: x^0 / 0! = 1
+taylorCos x n = termo + taylorCos x (n - 1)
+  where
+    termo = ((-1) ** fromIntegral n) * (x ** fromIntegral (2*n)) / fromIntegral (fat (2*n))
 
 --------------------------------------------------
 -- Q.22
--- Objetivo: 
+-- Objetivo: Calcula o desvio padrao das vendas
 --------------------------------------------------
 somavendas :: Int -> Int
 somavendas 0 = vendas 0
 somavendas n = vendas n + somavendas (n - 1)
 
-mediaVendas :: Int -> Float
+variancia :: Int -> Double
+variancia n = soma / fromIntegral (n + 1)
+  where
+    m = mediaVendas n
+    soma = sum [ (fromIntegral (vendas i) - m) ^ 2 | i <- [0..n] ]
+
+desvioPadrao :: Int -> Double
+desvioPadrao num = sqrt (variancia num)
+
+mediaVendas :: Int -> Double
 mediaVendas num = fromIntegral(somavendas num) / fromIntegral(num)
 
 vendas :: Int -> Int
@@ -213,12 +259,32 @@ vendas n
 
 --------------------------------------------------
 -- Q.23
--- Objetivo: 
+-- Objetivo: Avalia a funcao Ackerman
 --------------------------------------------------
 -- A) 
+ack :: Integer -> Integer -> Integer
+ack 0 n = n + 1
+ack m 0 | m > 0     = ack (m - 1) 1
+ack m n | m > 0 && n > 0 = ack (m - 1) (ack m (n - 1))
 
 -- B)
+-- ack 0 5 -> retorna 6
+-- ack 1 2 -> retorna 4
+-- ack 2 3 -> retorna 9
+-- ack 3 4 -> retorna 125
 
 -- C) 
+-- A funcao de Ackermann cresce muito mais rapido do que funes recursivas simples,
+-- como fatorial ou fibonacci, porque sua definicao envolve uma recursao aninhada, 
+-- isto eh, para calcular um valor ela precisa chamar a si mesma nao apenas de forma 
+-- direta, mas tambem dentro de outro chamado recursivo. Enquanto o fatorial cresce 
+-- de forma exponencial e o fibonacci tambem possui crescimento exponencial, a Ackermann 
+-- cresce em uma taxa superexponencial, ultrapassando rapidamente qualquer funcao primitiva 
+-- recursiva. Por isso, mesmo para valores pequenos de entrada, os resultados ja se tornam 
+-- extremamente grandes e dificeis de calcular.
 
 -- D) 
+ackLimited :: Integer -> Integer -> Either String Integer
+ackLimited m n
+  | m > 3 || n > 10 = Left "Erro: valores muito grandes para Ackermann!"
+  | otherwise       = Right (ack m n)
